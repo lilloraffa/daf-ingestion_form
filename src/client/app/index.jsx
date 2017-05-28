@@ -49,7 +49,7 @@ class FormItemText extends React.Component{
 }
 class FormItemSelectLang extends React.Component{
   render() {
-    return <select className={this.props.className} id={this.props.struct.fieldId} onChange={this.props.onChange}>
+    return <select className={this.props.className} id={this.props.fieldId} onChange={this.props.onChange}>
       <option value="" default></option>
       <option value="ita">Italiano</option>
       <option value="eng">English</option>
