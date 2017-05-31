@@ -63,11 +63,13 @@ class DataInputForm {
       subtitle: "Info for Dataset's data schema",
       hidden: false,
       fields: [
+        /*
         {
           fieldType: "inputFile",
           fieldName: "Data File",
           fieldId: "ds_datafile"
         },
+        */
         {
           fieldType: "input",
           fieldName: "Namespace",
@@ -82,12 +84,14 @@ class DataInputForm {
           fieldType: "input",
           fieldName: "Aliases",
           fieldId: "ds_aliases"
-        },
+        }
+        /*
         {
           fieldType: "inputNumField",
           fieldName: "Numero Campi",
           fieldId: "ds_nfields"
         },
+        */
       ]
     }
   }

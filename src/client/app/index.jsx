@@ -1,6 +1,7 @@
 import React from 'react';
 import {render} from 'react-dom';
 import {getJsonCatalog} from './inputform_reader.jsx'
+import {processInputFile, getFlatSchema} from './avroschema.jsx'
 import DataInputForm from './data_form.jsx'
 
 const data_dcatap = DataInputForm.getDcatap()
@@ -15,9 +16,9 @@ class NewDsForm extends React.Component {
     return <div className="container">
             <form>
               <FormSection struct={this.props.dcatap} data="" />
-              <FormSection struct={this.props.dataschema} data="" />
+              <FormSectionDataSchema struct={this.props.dataschema} data="" />
               <FormSection struct={this.props.operational} data="" />
-              <img src="img/icon-plus.png" height="20" width="20" onClick={() => getJsonCatalog()} />
+              <input type="button" value="Calc Schema" onClick={() => getJsonCatalog()}/>
             </form>
            </div>;
   }
@@ -49,7 +50,7 @@ class FormItemText extends React.Component{
 }
 class FormItemSelectLang extends React.Component{
   render() {
-    return <select className={this.props.className} id={this.props.fieldId} onChange={this.props.onChange}>
+    return <select className={this.props.className} id={this.props.struct.fieldId}>
       <option value="" default></option>
       <option value="ita">Italiano</option>
       <option value="eng">English</option>
@@ -141,10 +142,21 @@ class FormItemGeoRef extends React.Component{
   }
 }
 class FormItemInputDataType extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = {inputVal: this.props.value}
+
+    this.handleChange = this.handleChange.bind(this)
+  }
+
+  handleChange(event) {
+    this.setState({inputVal: event.target.value});
+  }
+
   render() {
     return <div>
       <label htmlFor={this.props.fieldId}>{this.props.fieldName}</label>
-      <input className="form-control" id={this.props.fieldId} />
+      <input className="form-control" id={this.props.fieldId} value={this.state.inputVal} onChange={this.handleChange}/>
     </div>
   }
 }
@@ -193,16 +205,48 @@ class FormItemFieldNum extends React.Component{
 
 //Fields for dataschema
 class FormItemField extends React.Component{
+  constructor(props){
+    super(props)
+    this.state = {nameField: props.fieldName, fieldProps: props.fieldProps}
+
+    this.handleChange = this.handleChange.bind(this)
+  }
+
+  handleChange(event) {
+    this.setState({nameField: event.target.value});
+  }
+
   render(){
     return <div key={this.props.fieldNum}>
             <h3>Field {this.props.fieldNum}</h3>
             <label htmlFor={"ds_fields-name_" + this.props.fieldNum}> Nome Campo </label>
-            <input className="form-control" id={"ds_fields-name_" + this.props.fieldNum} />
-            <FormItemInputDataType className="form-control" fieldId={"ds_fields-type_" + this.props.fieldNum} fieldName="Tipo Campo" />
+            <input className="form-control" id={"ds_fields-name_" + this.props.fieldNum} value={this.state.nameField} onChange={this.handleChange} />
+            <FormItemInputDataType className="form-control" fieldId={"ds_fields-type_" + this.props.fieldNum} fieldName="Tipo Campo" value={this.state.fieldProps.type}/>
             <FormItemFieldMetadata className="form-control" fieldId={"ds_fields-metadata"} fieldNum={this.props.fieldNum}/>
           </div>
   }
 }
+
+class FormItemInputDataFile extends React.Component {
+  calcDataFields(){
+    //var data = processInputFile()
+    //alert(JSON.stringify(data))
+    //alert(JSON.stringify(this.props.compInfo))
+
+    processInputFile((resData)=>{
+      console.log(JSON.stringify(resData))
+      //this.props.compInfo.
+    })
+  }
+  render(){
+    return <div className="form-group">
+            <label htmlFor={this.props.fieldId}>{this.props.fieldName}</label>
+            <input className={this.props.className} type="file" id={this.props.fieldId} accept=".csv, .txt, .json, .avro" />
+            <input type="button" value="Calc Schema" onClick={() => this.calcDataFields()}/>
+          </div>
+  }
+}
+
 //This is the metadata part to be showned to each field of the Dataset
 class FormItemFieldMetadata extends React.Component {
   render(){
@@ -260,8 +304,8 @@ class FormItemMultiInput extends React.Component{
             <InputType className="form-control" id={info.fieldId + "_val"} />
             <div id={"inputMultiLang_" + info.fieldId}>
               {this.state.inputs.map(input =>
-                <div>
-                  <SelType className="form-control" id={"lang_" + info.fieldId + input} onChange={this.handleSelChange} />
+                <div key={info.fieldId + "_" + this.state.selects["lang_" + info.fieldId + input]}>
+                  <SelType className="form-control" id={"lang_" + info.fieldId + input} onChange={this.handleSelChange} struct={info}/>
                   <InputType className="form-control" id={info.fieldId + "_" + this.state.selects["lang_" + info.fieldId + input]} />
                 </div>
               )}
@@ -291,8 +335,8 @@ class FormItemMultiInput extends React.Component{
 class FormSectionItem extends React.Component{
 
 
-  getItem(info) {
-    console.log(JSON.stringify(info))
+  getItem(info, compInfo) {
+    //console.log(JSON.stringify(info))
     switch(info.fieldType) {
       case "input":
         return <div>
@@ -367,10 +411,7 @@ class FormSectionItem extends React.Component{
 
 
       case "inputFile":
-        return <div className="form-group">
-                <label htmlFor={info.fieldId}>{info.fieldName}</label>
-                <input type="file" id={info.fieldId} accept=".csv, .txt, .json, .avro" />
-              </div>
+        return <FormItemInputDataFile fieldId={info.fieldId} fieldName={info.fieldName} className="form-control" compInfo={compInfo}/>
         break;
 
     }
@@ -378,7 +419,7 @@ class FormSectionItem extends React.Component{
 //
   render() {
     return <div className="form-group" key={this.props.fieldId}>
-            {this.getItem(this.props.struct)}
+            {this.getItem(this.props.struct, this.props.compInfo)}
           </div>
   }
 }
@@ -387,14 +428,14 @@ class FormSection extends React.Component {
 
   getField(fieldProps) {
     return <div className="form-group" key={fieldProps.fieldId}>
-            <FormSectionItem struct={fieldProps}/>
+            <FormSectionItem struct={fieldProps} compInfo={this.props.conpInfo}/>
           </div>
   }
   fieldList() {
     var fields =[];
     for (var elem of this.props.struct.fields) {
       fields.push(this.getField(elem))
-      console.log(JSON.stringify(elem))
+      //console.log(JSON.stringify(elem))
     }
     //console.log(JSON.stringify(fields))
     return fields;
@@ -407,6 +448,125 @@ class FormSection extends React.Component {
   }
 }
 
+class FormSectionDataSchema extends React.Component{
+  constructor(props){
+    super(props)
+    this.state = {fieldsObj: {}, numFields: '', fields: Array(), dataFile: ''}
+
+    this.getFieldsObj = this.getFieldsObj.bind(this);
+  }
+  //Input data file func
+  calcDataFields(){
+    //var data = processInputFile()
+    //alert(JSON.stringify(data))
+    //alert(JSON.stringify(this.props.compInfo))
+    if(this.state.dataFile!=''){
+      processInputFile((resData)=>{
+        console.log(JSON.stringify(resData))
+        this.setState({
+          fieldsObj: resData
+        });
+        //this.state.fieldsObj = resData
+        this.addFieldsFromFile()
+      })
+    } else if (this.state.numFields!='') {
+      this.addFieldsFromNum()
+    }
+  }
+
+  addFieldsFromFile(){
+    var listFields = []
+    const fieldsList = this.state.fieldsObj
+    for (var i=0; i<fieldsList.names.length; i++){
+      listFields.push(<FormItemField key={"ds_field_" + i} fieldNum={i} fieldName={fieldsList.names[i]} fieldProps={fieldsList.props[i]}/>)
+    }
+
+    this.setState({
+      fields: listFields
+    });
+  }
+
+  addFieldsFromNum(){
+    const currFields = this.state.fields
+    const currNumFields = this.state.fields.length
+    const numDeltaFields = this.state.numFields - this.state.fields.length
+    if(numDeltaFields < 0) {
+      var fieldsArr = this.state.fields
+      fieldsArr.splice(-1, -1*numDeltaFields)
+      this.setState({
+        numFields: fieldsArr.length,
+        fields: fieldsArr
+      });
+    } else {
+      var listFields = []
+      for (var i = 0; i<numDeltaFields; i++) {
+        listFields.push(<FormItemField key={"ds_field_" + i} fieldNum={i + currNumFields}/>)
+      }
+
+      this.setState({
+        fields: this.state.fields.concat(listFields)
+      });
+    }
+  }
+
+  /*
+  addFields(){
+    const currFields = this.state.fields
+    const currNumFields = this.state.fields.length
+    const numDeltaFields = this.state.numFields - this.state.fields.length
+    if(numDeltaFields < 0) {
+      this.setState({
+        numFields: this.state.fields.splice(0, this.state.numFields)
+      });
+    } else {
+      var listFields = []
+      for (var i = 0; i<numDeltaFields; i++) {
+        listFields.push(<FormItemField fieldNum={i + currNumFields}/>)
+      }
+
+      this.setState({
+        fields: this.state.fields.concat(listFields)
+      });
+    }
+  }
+  updateInputValue(evt) {
+    this.setState({
+      numFields: evt.target.value
+    });
+  }
+  */
+
+  updateNumFieldVal(evt) {
+    this.setState({
+      numFields: evt.target.value
+    });
+  }
+  updateFileFieldVal(evt) {
+    this.setState({
+      dataFile: evt.target.files[0]
+    });
+    console.log(evt.target.files[0])
+  }
+
+
+  getFieldsObj(fieldsObj){
+    this.state.fieldsObj = fieldsObj
+  }
+  render(){
+    return <div id="FormSectionDataSchema">
+            <FormSection struct={this.props.struct} data="" compInfo={this.state.compInfo}/>
+            <input type="hidden" id="avro_schema_datafile" />
+            <input type="hidden" id="avro_schema" />
+            <label htmlFor="ds_nfields"> Numero Campi </label>
+            <input className="form-control" id="ds_nfields" onChange={evt => this.updateNumFieldVal(evt)} />
+            <label htmlFor={this.props.fieldId}>{this.props.fieldName}</label>
+            <input className="form-control" type="file" id="ds_datafile" accept=".csv, .txt, .json, .avro" onChange={evt => this.updateFileFieldVal(evt)} />
+            <input type="button" value="Calc Schema" onClick={() => this.calcDataFields()}/>
+            <img src="img/icon-plus.png" height="20" width="20" onClick={() => this.addFields()} />
+            <div id="field-list">{this.state.fields}</div>
+          </div>
+  }
+}
 
 
 
