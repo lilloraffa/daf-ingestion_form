@@ -50,8 +50,10 @@ class FormItemText extends React.Component{
 }
 class FormItemSelectLang extends React.Component{
   render() {
-    return <select className={this.props.className} id={this.props.struct.fieldId}>
-      <option value="" default></option>
+    ///console.log(this.props.defaultVal)
+
+    return <select className={this.props.className} id={this.props.fieldId} onChange={this.props.onChange} value={this.props.defaultVal}>
+      <option value=""></option>
       <option value="ita">Italiano</option>
       <option value="eng">English</option>
       <option value="ger">German</option>
@@ -72,7 +74,7 @@ class FormItemSelectConstr extends React.Component{
               <option value="<="> &lt; = </option>
               <option value="list"> list </option>
             </select>
-            <input className={this.props.className} id={this.props.id + "_val_" + this.props.fieldNum} />
+            <input className={this.props.className} id={this.props.id + "_value_" + this.props.fieldNum} />
           </div>
   }
 }
@@ -90,7 +92,7 @@ class FormItemSelectTheme extends React.Component{
 //Still to be implemented
 class FormItemSelectCategory extends React.Component{
   render() {
-    return <select className={this.props.className} id={this.props.id} onChange={this.props.onChange}>
+    return <select className={this.props.className} id={this.props.struct.fieldId} onChange={this.props.onChange}>
       <option value="" default></option>
       <option value="uri_cultura">Cultura & Turismo</option>
       <option value="uri_economia">Economia & Finanza</option>
@@ -283,29 +285,18 @@ class FormItemMultiInput extends React.Component{
     this.addElement = this.addElement.bind(this);
   }
 
-  _getTag(tagName) {
-    switch(tagName){
-      case "formiteminput": return "FormItemInput"
-    }
-  }
-
-  elementSelector(info){
-    switch(info){
-      case "inputMultiLang" :
-    }
-  }
   //It shows an input for default value and a "plus" button that make appear a new pair (select language)(input) available.
   itemInputMultiLang(info) {
 
     const InputType = this.props.typeInput
     const SelType = this.props.typeSel
     return <div>
-            <label htmlFor={info.fieldId + "_val"}> {info.fieldName} </label>
-            <InputType className="form-control" id={info.fieldId + "_val"} />
+            <label htmlFor={info.fieldId + "_value"}> {info.fieldName} </label>
+            <InputType className="form-control" id={info.fieldId + "_value"} />
             <div id={"inputMultiLang_" + info.fieldId}>
               {this.state.inputs.map(input =>
                 <div key={info.fieldId + "_" + this.state.selects["lang_" + info.fieldId + input]}>
-                  <SelType className="form-control" id={"lang_" + info.fieldId + input} onChange={this.handleSelChange} struct={info}/>
+                  <SelType className="form-control" fieldId={"lang_" + info.fieldId + input} onChange={this.handleSelChange} struct={info} defaultVal={this.state.selects["lang_" + info.fieldId + input]}/>
                   <InputType className="form-control" id={info.fieldId + "_" + this.state.selects["lang_" + info.fieldId + input]} />
                 </div>
               )}
@@ -315,8 +306,6 @@ class FormItemMultiInput extends React.Component{
   }
 
   handleSelChange(e){
-    //console.log(e.target.value)
-    //console.log(e.target.id)
     var x={}
     x[e.target.id]=e.target.value
     this.setState({selects: Object.assign(this.state.selects, x)})
@@ -369,7 +358,7 @@ class FormSectionItem extends React.Component{
       case "selectLang":
         return <div>
                 <label htmlFor={info.fieldId}>{info.fieldName}</label>
-                <FormItemSelectLang className="form-control" struct={info} />
+                <FormItemSelectLang className="form-control" fieldId ={info.fieldId} struct={info} />
               </div>
         break;
 
@@ -508,33 +497,6 @@ class FormSectionDataSchema extends React.Component{
       });
     }
   }
-
-  /*
-  addFields(){
-    const currFields = this.state.fields
-    const currNumFields = this.state.fields.length
-    const numDeltaFields = this.state.numFields - this.state.fields.length
-    if(numDeltaFields < 0) {
-      this.setState({
-        numFields: this.state.fields.splice(0, this.state.numFields)
-      });
-    } else {
-      var listFields = []
-      for (var i = 0; i<numDeltaFields; i++) {
-        listFields.push(<FormItemField fieldNum={i + currNumFields}/>)
-      }
-
-      this.setState({
-        fields: this.state.fields.concat(listFields)
-      });
-    }
-  }
-  updateInputValue(evt) {
-    this.setState({
-      numFields: evt.target.value
-    });
-  }
-  */
 
   updateNumFieldVal(evt) {
     this.setState({

@@ -11,47 +11,47 @@ class DataInputForm {
         {
           fieldType: "inputMultiLang",
           fieldName: "Titolo",
-          fieldId: "dct:title"
+          fieldId: "dct_title"
         },
         {
           fieldType: "textMultiLang",
           fieldName: "Descrizione",
-          fieldId: "dct:description"
+          fieldId: "dct_description"
         },
         {
           fieldType: "selectTheme",
           fieldName: "Ambito",
-          fieldId: "dcat:theme"
+          fieldId: "dcat_theme"
         },
         {
           fieldType: "selectCategory",
           fieldName: "Categorie",
-          fieldId: "dct:subject"
+          fieldId: "dct_subject"
         },
         {
           fieldType: "text",
           fieldName: "Keywords / Tags",
-          fieldId: "dct:keyword"
+          fieldId: "dct_keyword"
         },
         {
           fieldType: "inputMultiLang",
           fieldName: "Owner",
-          fieldId: "dct:rightsHolder"
+          fieldId: "dct_rightsHolder"
         },
         {
           fieldType: "input",
           fieldName: "Frequenza Aggiornamento",
-          fieldId: "dct:accrualPeriodicity"
+          fieldId: "dct_accrualPeriodicity"
         },
         {
           fieldType: "selectLang",
           fieldName: "Lingua",
-          fieldId: "dct:language"
+          fieldId: "dct_language"
         },
         {
           fieldType: "input",
           fieldName: "Landing Page",
-          fieldId: "dcat:landingPage"
+          fieldId: "dcat_landingPage"
         },
       ]
     }

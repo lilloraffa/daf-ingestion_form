@@ -1,14 +1,4 @@
-//import React from 'react';
-//import {render} from 'react-dom';
-/*
-export class Prova extends React.Component{
-  //var dcat_title = document.getElementById('dct:title').value
-  getJsonDcatap(){
-    alert("ciao")
-  }
 
-}
-*/
 export {getJsonCatalog}
 function getJsonCatalog(){
   var json = {}
@@ -16,8 +6,8 @@ function getJsonCatalog(){
   json['dataschema'] = getJsonDataschema()
   json['operational'] = getJsonOperational()
   sendPostData(json)
-  //alert(JSON.stringify(json))
   console.log(json)
+  console.log(JSON.stringify(json))
 
   return json
 }
@@ -38,34 +28,34 @@ function sendPostData(json) {
 
 function getJsonDcatap(){
   //Get Title (can be many)
-  var dcat_title_n = document.querySelectorAll('[id^="dct:title_"]')
+  var dcat_title_n = document.querySelectorAll('[id^="dct_title_"]')
   //Get Description (can be many)
-  var dcat_desc_n = document.querySelectorAll('[id^="dct:description_"]')
+  var dcat_desc_n = document.querySelectorAll('[id^="dct_description_"]')
   //Get Theme (Needs to be one)
-  var dcat_theme = document.querySelector('[id="dcat:theme"]')
+  var dcat_theme = document.querySelector('[id="dcat_theme"]')
   //Get Categories (can be many)
-  var dcat_subject_n = document.querySelectorAll('[id^="dct:subject"]')
+  var dcat_subject_n = document.querySelectorAll('[id^="dct_subject"]')
   //Get Keywords/Tags
-  var dcat_keyword = document.querySelector('[id="dct:keyword"]')
+  var dcat_keyword = document.querySelector('[id="dct_keyword"]')
   //Get Ownership (can be many)
-  var dcat_rightsHolder_n = document.querySelectorAll('[id^="dct:rightsHolder"]')
+  var dcat_rightsHolder_n = document.querySelectorAll('[id^="dct_rightsHolder"]')
   //Get Periodicity
-  var dcat_accrualPeriodicity = document.querySelector('[id="dct:accrualPeriodicity"]')
+  var dcat_accrualPeriodicity = document.querySelector('[id="dct_accrualPeriodicity"]')
   //Get Language
-  var dcat_language = document.querySelector('[id="dct:language"]')
+  var dcat_language = document.querySelector('[id="dct_language"]')
   //Get Landing Page
-  var dcat_landingPage= document.querySelector('[id="dcat:landingPage"]')
+  var dcat_landingPage= document.querySelector('[id="dcat_landingPage"]')
 
   var json = {}
-  json['dct:title'] = getMultiElement(dcat_title_n)
-  json['dct:description'] = getMultiElement(dcat_desc_n)
-  json['dct:theme'] = dcat_theme.value
-  json['dct:subject'] = getMultiElement(dcat_subject_n)
-  json['dct:keyword'] = dcat_keyword.value
-  json['dct:rightsHolder'] = getMultiElement(dcat_rightsHolder_n)
-  json['dct:accrualPeriodicity'] = dcat_accrualPeriodicity.value
-  json['dct:language'] = dcat_language.value
-  json['dcat:landingPage'] = dcat_landingPage.value
+  json['dct_title'] = getMultiElement(dcat_title_n)
+  json['dct_description'] = getMultiElement(dcat_desc_n)
+  json['dct_theme'] = getThemeCatObj(dcat_theme.value)
+  json['dct_subject'] = [getThemeCatObj(dcat_subject_n[0].value)]
+  json['dct_keyword'] = dcat_keyword.value
+  json['dct_rightsHolder'] = getMultiElement(dcat_rightsHolder_n)
+  json['dct_accrualPeriodicity'] = dcat_accrualPeriodicity.value
+  json['dct_language'] = dcat_language.value
+  json['dcat_landingPage'] = dcat_landingPage.value
   //alert(JSON.stringify(json) + " - i")
   return json
 }
@@ -95,27 +85,57 @@ function getJsonDataschema(){
     field['type'] = fields_type[i].value
 
     var metadata = {}
-    metadata['desc'] = {val: fields_metadata_desc[i].value}
+    metadata['desc'] = fields_metadata_desc[i].value
     metadata['required'] = fields_metadata_required[i].value
     metadata['field_type'] = fields_metadata_fieldtype[i].value
     metadata['cat'] = fields_metadata_cat[i].value
     metadata['tag'] = fields_metadata_tag[i].value
     metadata['constr'] = [{type: fields_metadata_constr[i].value, param: fields_metadata_constr_val[i].value}]
-    metadata['semantics'] = {'@id': fields_metadata_semsubj[i].value, '@context': fields_metadata_semcontext[i].value}
+    metadata['semantics'] = {'id': fields_metadata_semsubj[i].value, 'context': fields_metadata_semcontext[i].value}
 
     field['metadata'] = metadata
     fieldsList.push(field)
   }
 
   var json = {}
+  var avroGenerated = JSON.parse($('#avro_schema_datafile').val())
+  var avroFields = getAvroFields(avroGenerated, fieldsList)
+
+  json['avro'] = {
+    namespace: namespace.value,
+    name: name.value,
+    aliases: aliases.value,
+    type: "record",
+    fields: avroFields
+  }
+  json['flatSchema'] = fieldsList
+
+  /*
   json['namespace'] = namespace.value
   json['name'] = name.value
   json['aliases'] = aliases.value
   json['fields'] = fieldsList
-
+*/
   //alert(JSON.stringify(json) + " - i")
   return json
 
+}
+
+function getAvroFields(avro, flatSchema){
+  var avroFields = []
+
+  if(avro!=''){
+    if(avro.type === "record"){
+      avroFields = avro.fields
+    } else if(avro.type === "array"){
+      avroFields = avro.items.fields
+    }
+  } else {
+    for (var field of flatSchema){
+      avroFields.push({name: field.name, type: field.type})
+    }
+  }
+  return avroFields
 }
 
 function getJsonOperational(){
@@ -161,4 +181,12 @@ function getMultiElement(elements) {
     json[idValue] = elem.value
   }
   return json
+}
+//Temporary Workaround
+function getThemeCatObj(element){
+  return {
+    id: element,
+    value: element,
+    it: element
+  }
 }
